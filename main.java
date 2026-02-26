@@ -145,3 +145,52 @@ public final class MonsterScanEngine {
     private final Set<String> reporters = new HashSet<>();
     private final Map<Integer, Long> riskThreshold = new HashMap<>();
     private final Map<String, String> tokenAddress = new HashMap<>();
+    private final Set<String> tokenRegistered = new HashSet<>();
+    private final List<String> tokenScanIds = new ArrayList<>();
+    private final Map<String, Integer> scanCategory = new HashMap<>();
+    private final Map<Integer, String> categoryName = new HashMap<>();
+    private final Map<Integer, List<String>> categoryScanIds = new HashMap<>();
+    private int categoryCount;
+    private long vaultBalance;
+    private boolean paused;
+
+    @SuppressWarnings("unchecked")
+    public MonsterScanEngine(String scannerKeeper, String reportVault, long deployBlock) {
+        if (scannerKeeper == null || scannerKeeper.isEmpty()) throw new MSC_ZeroAddress();
+        if (reportVault == null || reportVault.isEmpty()) throw new MSC_ZeroAddress();
+        this.scannerKeeper = scannerKeeper;
+        this.reportVault = reportVault;
+        this.deployBlock = deployBlock;
+        this.currentBlock = deployBlock;
+        riskThreshold.put(1, 100L);
+        riskThreshold.put(2, 200L);
+        riskThreshold.put(3, 500L);
+        riskThreshold.put(5, 1000L);
+        riskThreshold.put(8, 2000L);
+    }
+
+    public void setBlock(long block) { this.currentBlock = block; }
+    public long getBlock() { return currentBlock; }
+
+    public int registerCategory(String nameHash, String caller) {
+        if (!scannerKeeper.equals(caller)) throw new MSC_NotKeeper();
+        if (categoryCount >= MSJ.MSC_MAX_CATEGORIES) throw new MSC_CategoryLimitReached();
+        int id = categoryCount++;
+        categoryName.put(id, nameHash);
+        categoryScanIds.put(id, new ArrayList<>());
+        return id;
+    }
+
+    public void registerToken(String tokenScanId, String token, String symbolHash, String caller) {
+        if (!scannerKeeper.equals(caller)) throw new MSC_NotKeeper();
+        if (token == null || token.isEmpty()) throw new MSC_ZeroToken();
+        if (tokenScanId == null || tokenScanId.isEmpty()) throw new MSC_ZeroScanId();
+        if (tokenRegistered.contains(tokenScanId)) throw new MSC_ScanAlreadyExists();
+        if (tokenScanIds.size() >= MSJ.MSC_MAX_SCANS) throw new MSC_MaxScansReached();
+        tokenRegistered.add(tokenScanId);
+        tokenAddress.put(tokenScanId, token);
+        tokenScanIds.add(tokenScanId);
+    }
+
+    public void submitScan(String scanId, String target, int riskTier, String flagsHash, String reporter) {
+        submitScanWithCategory(scanId, target, riskTier, flagsHash, -1, reporter);
