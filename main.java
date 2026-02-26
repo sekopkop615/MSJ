@@ -243,3 +243,52 @@ public final class MonsterScanEngine {
         if (!blacklist.contains(target)) throw new MSC_NotBlacklisted();
         blacklist.remove(target);
         blacklistArr.remove(target);
+    }
+
+    public void setRiskThreshold(int riskTier, long value, String caller) {
+        if (!scannerKeeper.equals(caller)) throw new MSC_NotKeeper();
+        if (riskTier < 0 || riskTier > MSJ.MSC_MAX_RISK_TIER) throw new MSC_InvalidRiskTier();
+        riskThreshold.put(riskTier, value);
+    }
+
+    public void registerReporter(String reporter, String caller) {
+        if (!scannerKeeper.equals(caller)) throw new MSC_NotKeeper();
+        if (reporter == null || reporter.isEmpty()) throw new MSC_ZeroAddress();
+        if (reporters.contains(reporter)) throw new MSC_ReporterAlreadyRegistered();
+        reporters.add(reporter);
+    }
+
+    public void revokeReporter(String reporter, String caller) {
+        if (!scannerKeeper.equals(caller)) throw new MSC_NotKeeper();
+        if (!reporters.contains(reporter)) throw new MSC_ReporterNotRegistered();
+        reporters.remove(reporter);
+    }
+
+    public void pause() { paused = true; }
+    public void unpause() { paused = false; }
+    public boolean isPaused() { return paused; }
+
+    public ScanInfoDTO getScan(String scanId) { return scans.get(scanId); }
+    public boolean scanExists(String scanId) { return scans.containsKey(scanId); }
+    public List<String> getScanIds() { return new ArrayList<>(scanIds); }
+    public int targetScanCount(String target) { return targetScanIds.getOrDefault(target, Collections.emptyList()).size(); }
+    public List<String> getTargetScanIds(String target) { return new ArrayList<>(targetScanIds.getOrDefault(target, Collections.emptyList())); }
+    public boolean isWhitelisted(String target) { return whitelist.contains(target); }
+    public boolean isBlacklisted(String target) { return blacklist.contains(target); }
+    public boolean isReporter(String addr) { return reporters.contains(addr); }
+    public long getRiskThreshold(int tier) { return riskThreshold.getOrDefault(tier, 0L); }
+    public long getVaultBalance() { return vaultBalance; }
+    public String getTokenAddress(String tokenScanId) { return tokenAddress.get(tokenScanId); }
+    public boolean tokenRegistered(String tokenScanId) { return tokenRegistered.contains(tokenScanId); }
+    public List<String> getTokenScanIds() { return new ArrayList<>(tokenScanIds); }
+    public int getCategoryCount() { return categoryCount; }
+    public String getCategoryName(int categoryId) { return categoryName.get(categoryId); }
+    public int getCategoryScanCount(int categoryId) { return categoryScanIds.getOrDefault(categoryId, Collections.emptyList()).size(); }
+    public List<String> getCategoryScanIds(int categoryId) { return new ArrayList<>(categoryScanIds.getOrDefault(categoryId, Collections.emptyList())); }
+    public Integer getScanCategory(String scanId) { return scanCategory.get(scanId); }
+    public String getScannerKeeper() { return scannerKeeper; }
+    public String getReportVault() { return reportVault; }
+    public long getDeployBlock() { return deployBlock; }
+    public int scanCount() { return scanIds.size(); }
+    public int reporterCount() { return reporters.size(); }
+    public int tokenCount() { return tokenScanIds.size(); }
