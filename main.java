@@ -194,3 +194,52 @@ public final class MonsterScanEngine {
 
     public void submitScan(String scanId, String target, int riskTier, String flagsHash, String reporter) {
         submitScanWithCategory(scanId, target, riskTier, flagsHash, -1, reporter);
+    }
+
+    public void submitScanWithCategory(String scanId, String target, int riskTier, String flagsHash, int categoryId, String reporter) {
+        if (paused) throw new RuntimeException("MSC_Paused");
+        if (reporter == null || !reporters.contains(reporter)) throw new MSC_NotReporter();
+        if (scanId == null || scanId.isEmpty()) throw new MSC_ZeroScanId();
+        if (target == null || target.isEmpty()) throw new MSC_ZeroAddress();
+        if (riskTier < 0 || riskTier > MSJ.MSC_MAX_RISK_TIER) throw new MSC_InvalidRiskTier();
+        if (scans.containsKey(scanId)) throw new MSC_ScanAlreadyExists();
+        if (scanIds.size() >= MSJ.MSC_MAX_SCANS) throw new MSC_MaxScansReached();
+        if (categoryId >= 0 && categoryId >= categoryCount) throw new MSC_InvalidCategory();
+        ScanInfoDTO info = new ScanInfoDTO(scanId, target, riskTier, flagsHash != null ? flagsHash : "", reporter, currentBlock, true);
+        scans.put(scanId, info);
+        scanIds.add(scanId);
+        targetScanIds.computeIfAbsent(target, k -> new ArrayList<>()).add(scanId);
+        if (categoryId >= 0) {
+            scanCategory.put(scanId, categoryId);
+            categoryScanIds.get(categoryId).add(scanId);
+        }
+    }
+
+    public void addToWhitelist(String target, String caller) {
+        if (!scannerKeeper.equals(caller)) throw new MSC_NotKeeper();
+        if (target == null || target.isEmpty()) throw new MSC_ZeroAddress();
+        if (whitelist.contains(target)) throw new MSC_AlreadyWhitelisted();
+        whitelist.add(target);
+        whitelistArr.add(target);
+    }
+
+    public void removeFromWhitelist(String target, String caller) {
+        if (!scannerKeeper.equals(caller)) throw new MSC_NotKeeper();
+        if (!whitelist.contains(target)) throw new MSC_NotWhitelisted();
+        whitelist.remove(target);
+        whitelistArr.remove(target);
+    }
+
+    public void addToBlacklist(String target, String caller) {
+        if (!scannerKeeper.equals(caller)) throw new MSC_NotKeeper();
+        if (target == null || target.isEmpty()) throw new MSC_ZeroAddress();
+        if (blacklist.contains(target)) throw new MSC_AlreadyBlacklisted();
+        blacklist.add(target);
+        blacklistArr.add(target);
+    }
+
+    public void removeFromBlacklist(String target, String caller) {
+        if (!scannerKeeper.equals(caller)) throw new MSC_NotKeeper();
+        if (!blacklist.contains(target)) throw new MSC_NotBlacklisted();
+        blacklist.remove(target);
+        blacklistArr.remove(target);
