@@ -96,3 +96,52 @@ final class TokenInfoDTO {
         this.symbolHash = symbolHash;
         this.registered = registered;
     }
+}
+
+final class AddressStatusDTO {
+    final boolean whitelisted;
+    final boolean blacklisted;
+    final int scanCount;
+
+    AddressStatusDTO(boolean whitelisted, boolean blacklisted, int scanCount) {
+        this.whitelisted = whitelisted;
+        this.blacklisted = blacklisted;
+        this.scanCount = scanCount;
+    }
+}
+
+final class GlobalStatsDTO {
+    final int totalScans;
+    final int totalTokens;
+    final int totalReporters;
+    final int whitelistLen;
+    final int blacklistLen;
+    final long vaultBalance;
+
+    GlobalStatsDTO(int totalScans, int totalTokens, int totalReporters, int whitelistLen, int blacklistLen, long vaultBalance) {
+        this.totalScans = totalScans;
+        this.totalTokens = totalTokens;
+        this.totalReporters = totalReporters;
+        this.whitelistLen = whitelistLen;
+        this.blacklistLen = blacklistLen;
+        this.vaultBalance = vaultBalance;
+    }
+}
+
+// ============== Engine ==============
+
+public final class MonsterScanEngine {
+    private final String scannerKeeper;
+    private final String reportVault;
+    private final long deployBlock;
+    private long currentBlock;
+    private final Map<String, ScanInfoDTO> scans = new HashMap<>();
+    private final List<String> scanIds = new ArrayList<>();
+    private final Map<String, List<String>> targetScanIds = new HashMap<>();
+    private final Set<String> whitelist = new HashSet<>();
+    private final Set<String> blacklist = new HashSet<>();
+    private final List<String> whitelistArr = new ArrayList<>();
+    private final List<String> blacklistArr = new ArrayList<>();
+    private final Set<String> reporters = new HashSet<>();
+    private final Map<Integer, Long> riskThreshold = new HashMap<>();
+    private final Map<String, String> tokenAddress = new HashMap<>();
