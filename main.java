@@ -47,3 +47,52 @@ class MSC_NotKeeper extends RuntimeException { public MSC_NotKeeper() { super("M
 class MSC_NotReporter extends RuntimeException { public MSC_NotReporter() { super("MSC_NotReporter"); } }
 class MSC_NotVault extends RuntimeException { public MSC_NotVault() { super("MSC_NotVault"); } }
 class MSC_ScanAlreadyExists extends RuntimeException { public MSC_ScanAlreadyExists() { super("MSC_ScanAlreadyExists"); } }
+class MSC_ScanNotFound extends RuntimeException { public MSC_ScanNotFound() { super("MSC_ScanNotFound"); } }
+class MSC_InvalidRiskTier extends RuntimeException { public MSC_InvalidRiskTier() { super("MSC_InvalidRiskTier"); } }
+class MSC_AlreadyWhitelisted extends RuntimeException { public MSC_AlreadyWhitelisted() { super("MSC_AlreadyWhitelisted"); } }
+class MSC_NotWhitelisted extends RuntimeException { public MSC_NotWhitelisted() { super("MSC_NotWhitelisted"); } }
+class MSC_AlreadyBlacklisted extends RuntimeException { public MSC_AlreadyBlacklisted() { super("MSC_AlreadyBlacklisted"); } }
+class MSC_NotBlacklisted extends RuntimeException { public MSC_NotBlacklisted() { super("MSC_NotBlacklisted"); } }
+class MSC_ArrayLengthMismatch extends RuntimeException { public MSC_ArrayLengthMismatch() { super("MSC_ArrayLengthMismatch"); } }
+class MSC_BatchTooLarge extends RuntimeException { public MSC_BatchTooLarge() { super("MSC_BatchTooLarge"); } }
+class MSC_MaxScansReached extends RuntimeException { public MSC_MaxScansReached() { super("MSC_MaxScansReached"); } }
+class MSC_InvalidCategory extends RuntimeException { public MSC_InvalidCategory() { super("MSC_InvalidCategory"); } }
+class MSC_CategoryLimitReached extends RuntimeException { public MSC_CategoryLimitReached() { super("MSC_CategoryLimitReached"); } }
+class MSC_ZeroToken extends RuntimeException { public MSC_ZeroToken() { super("MSC_ZeroToken"); } }
+class MSC_ReporterAlreadyRegistered extends RuntimeException { public MSC_ReporterAlreadyRegistered() { super("MSC_ReporterAlreadyRegistered"); } }
+class MSC_ReporterNotRegistered extends RuntimeException { public MSC_ReporterNotRegistered() { super("MSC_ReporterNotRegistered"); } }
+
+// ============== DTOs ==============
+
+final class ScanInfoDTO {
+    final String scanId;
+    final String target;
+    final int riskTier;
+    final String flagsHash;
+    final String reporter;
+    final long atBlock;
+    final boolean exists;
+
+    ScanInfoDTO(String scanId, String target, int riskTier, String flagsHash, String reporter, long atBlock, boolean exists) {
+        this.scanId = scanId;
+        this.target = target;
+        this.riskTier = riskTier;
+        this.flagsHash = flagsHash;
+        this.reporter = reporter;
+        this.atBlock = atBlock;
+        this.exists = exists;
+    }
+}
+
+final class TokenInfoDTO {
+    final String tokenScanId;
+    final String tokenAddress;
+    final String symbolHash;
+    final boolean registered;
+
+    TokenInfoDTO(String tokenScanId, String tokenAddress, String symbolHash, boolean registered) {
+        this.tokenScanId = tokenScanId;
+        this.tokenAddress = tokenAddress;
+        this.symbolHash = symbolHash;
+        this.registered = registered;
+    }
