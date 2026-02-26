@@ -292,3 +292,52 @@ public final class MonsterScanEngine {
     public int scanCount() { return scanIds.size(); }
     public int reporterCount() { return reporters.size(); }
     public int tokenCount() { return tokenScanIds.size(); }
+    public int whitelistSize() { return whitelistArr.size(); }
+    public int blacklistSize() { return blacklistArr.size(); }
+    public String getWhitelistAt(int index) { return whitelistArr.get(index); }
+    public String getBlacklistAt(int index) { return blacklistArr.get(index); }
+    public String getScanIdAt(int index) { return scanIds.get(index); }
+    public String getTargetScanAt(String target, int index) { return targetScanIds.getOrDefault(target, Collections.emptyList()).get(index); }
+    public String getTokenScanIdAt(int index) { return tokenScanIds.get(index); }
+    public String getCategoryScanAt(int categoryId, int index) { return categoryScanIds.getOrDefault(categoryId, Collections.emptyList()).get(index); }
+
+    public GlobalStatsDTO getGlobalStats() {
+        return new GlobalStatsDTO(scanIds.size(), tokenScanIds.size(), reporters.size(), whitelistArr.size(), blacklistArr.size(), vaultBalance);
+    }
+
+    public AddressStatusDTO getAddressStatus(String target) {
+        return new AddressStatusDTO(whitelist.contains(target), blacklist.contains(target), targetScanIds.getOrDefault(target, Collections.emptyList()).size());
+    }
+
+    public List<String> getScanIdsPaginated(int offset, int limit) {
+        int total = scanIds.size();
+        if (offset >= total) return Collections.emptyList();
+        if (limit > MSJ.MSC_VIEW_BATCH) limit = MSJ.MSC_VIEW_BATCH;
+        int end = Math.min(offset + limit, total);
+        return new ArrayList<>(scanIds.subList(offset, end));
+    }
+
+    public boolean exceedsThreshold(String scanId, int riskTier) {
+        ScanInfoDTO s = scans.get(scanId);
+        if (s == null) return false;
+        long thresh = riskThreshold.getOrDefault(riskTier, 0L);
+        return thresh > 0 && s.riskTier >= thresh;
+    }
+}
+
+// ============== Validation ==============
+
+final class MSJValidation {
+    private MSJValidation() {}
+    static boolean isValidAddress(String addr) {
+        if (addr == null) return false;
+        String a = addr.startsWith("0x") ? addr.substring(2) : addr;
+        return a.length() == 40 && a.chars().allMatch(c -> Character.digit(c, 16) >= 0);
+    }
+    static boolean isValidScanId(String id) {
+        return id != null && id.length() == 64 && id.chars().allMatch(c -> Character.digit(c, 16) >= 0);
+    }
+    static boolean isValidRiskTier(int tier) {
+        return tier >= 0 && tier <= MSJ.MSC_MAX_RISK_TIER;
+    }
+}
