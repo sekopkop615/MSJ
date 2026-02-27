@@ -439,3 +439,52 @@ final class MSJScanIds {
     static String categoryNameHash(String name) { return MSJ.sha256Hex(name); }
 }
 
+// ============== Main ==============
+
+class MSJMain {
+    public static void main(String[] args) {
+        String keeper = "0x" + "a".repeat(40);
+        String vault = "0x4B7e2F9a1C5d8E0b3A6c9D2f5E8a1B4d7C0e3F6a9";
+        MonsterScanEngine engine = new MonsterScanEngine(keeper, vault, 1000);
+        engine.setBlock(1000);
+        engine.registerReporter(keeper, keeper);
+        engine.registerToken(MSJScanIds.scanIdFromString("USDC"), "0x" + "b".repeat(40), MSJScanIds.symbolHash("USDC"), keeper);
+        engine.submitScan(MSJScanIds.scanIdFromString("scan1"), "0x" + "c".repeat(40), 2, MSJScanIds.symbolHash("flags"), keeper);
+        engine.addToWhitelist("0x" + "c".repeat(40), keeper);
+        System.out.println("MSJ run OK. Global stats: " + MSJApiHandlers.getGlobalStats(engine));
+    }
+}
+
+// ============== Extended engine views ==============
+
+final class MSJEngineViews {
+    private MSJEngineViews() {}
+    static List<String> getWhitelistPaginated(MonsterScanEngine e, int offset, int limit) {
+        int total = e.whitelistSize();
+        if (offset >= total) return Collections.emptyList();
+        if (limit > MSJ.MSC_VIEW_BATCH) limit = MSJ.MSC_VIEW_BATCH;
+        int end = Math.min(offset + limit, total);
+        List<String> all = new ArrayList<>();
+        for (int i = offset; i < end; i++) all.add(e.getWhitelistAt(i));
+        return all;
+    }
+    static List<String> getBlacklistPaginated(MonsterScanEngine e, int offset, int limit) {
+        int total = e.blacklistSize();
+        if (offset >= total) return Collections.emptyList();
+        if (limit > MSJ.MSC_VIEW_BATCH) limit = MSJ.MSC_VIEW_BATCH;
+        int end = Math.min(offset + limit, total);
+        List<String> all = new ArrayList<>();
+        for (int i = offset; i < end; i++) all.add(e.getBlacklistAt(i));
+        return all;
+    }
+    static long[] getRiskTierCounts(MonsterScanEngine engine) {
+        long[] counts = new long[MSJ.MSC_MAX_RISK_TIER + 1];
+        for (String id : engine.getScanIds()) {
+            ScanInfoDTO s = engine.getScan(id);
+            if (s != null && s.riskTier >= 0 && s.riskTier <= MSJ.MSC_MAX_RISK_TIER)
+                counts[s.riskTier]++;
+        }
+        return counts;
+    }
+    static int countScansByReporter(MonsterScanEngine engine, String reporter) {
+        int c = 0;
