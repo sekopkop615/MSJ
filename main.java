@@ -537,3 +537,52 @@ final class MSJScanListResponse {
     final int total;
     final int offset;
     final int limit;
+    MSJScanListResponse(List<Map<String, Object>> scans, int total, int offset, int limit) {
+        this.scans = scans;
+        this.total = total;
+        this.offset = offset;
+        this.limit = limit;
+    }
+    Map<String, Object> toMap() {
+        Map<String, Object> m = new HashMap<>();
+        m.put("scans", scans);
+        m.put("total", total);
+        m.put("offset", offset);
+        m.put("limit", limit);
+        return m;
+    }
+}
+
+final class MSJTokenListResponse {
+    final List<Map<String, Object>> tokens;
+    final int total;
+    MSJTokenListResponse(List<Map<String, Object>> tokens, int total) {
+        this.tokens = tokens;
+        this.total = total;
+    }
+}
+
+// ============== Pagination helpers ==============
+
+final class MSJPagination {
+    static int clampLimit(int limit) { return Math.min(limit, MSJ.MSC_VIEW_BATCH); }
+    static int endIndex(int offset, int limit, int total) { return Math.min(offset + limit, total); }
+    static boolean validOffset(int offset, int total) { return offset >= 0 && offset < total; }
+}
+
+// ============== Risk tier helpers ==============
+
+final class MSJRiskTier {
+    static final String LABEL_LOW = "LOW";
+    static final String LABEL_MEDIUM = "MEDIUM";
+    static final String LABEL_HIGH = "HIGH";
+    static final String LABEL_CRITICAL = "CRITICAL";
+    static String label(int tier) {
+        if (tier <= 0) return LABEL_LOW;
+        if (tier <= 3) return LABEL_MEDIUM;
+        if (tier <= 6) return LABEL_HIGH;
+        return LABEL_CRITICAL;
+    }
+    static boolean isHigh(int tier, int threshold) { return tier >= threshold; }
+}
+
