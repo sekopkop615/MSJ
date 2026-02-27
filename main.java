@@ -488,3 +488,52 @@ final class MSJEngineViews {
     }
     static int countScansByReporter(MonsterScanEngine engine, String reporter) {
         int c = 0;
+        for (String id : engine.getScanIds()) {
+            ScanInfoDTO s = engine.getScan(id);
+            if (s != null && reporter.equals(s.reporter)) c++;
+        }
+        return c;
+    }
+    static int countScansByRiskTier(MonsterScanEngine engine, int riskTier) {
+        if (riskTier < 0 || riskTier > MSJ.MSC_MAX_RISK_TIER) return 0;
+        int c = 0;
+        for (String id : engine.getScanIds()) {
+            ScanInfoDTO s = engine.getScan(id);
+            if (s != null && s.riskTier == riskTier) c++;
+        }
+        return c;
+    }
+    static List<String> getScansByReporter(MonsterScanEngine engine, String reporter, int offset, int limit) {
+        List<String> out = new ArrayList<>();
+        for (String id : engine.getScanIds()) {
+            ScanInfoDTO s = engine.getScan(id);
+            if (s != null && reporter.equals(s.reporter)) out.add(id);
+        }
+        int total = out.size();
+        if (offset >= total) return Collections.emptyList();
+        if (limit > MSJ.MSC_VIEW_BATCH) limit = MSJ.MSC_VIEW_BATCH;
+        int end = Math.min(offset + limit, total);
+        return new ArrayList<>(out.subList(offset, end));
+    }
+}
+
+// ============== Constants export ==============
+
+final class MSJConstants {
+    static final int MAX_RISK_TIER = 10;
+    static final int MAX_SCANS = 50_000;
+    static final int BATCH_LIMIT = 64;
+    static final int VIEW_BATCH = 96;
+    static final int MAX_CATEGORIES = 16;
+    static final String SCAN_DOMAIN = MSJ.MSC_SCAN_DOMAIN;
+    static final String REPORTER_ROLE = MSJ.MSC_REPORTER_ROLE;
+    static final String TOKEN_NAMESPACE = MSJ.MSC_TOKEN_NAMESPACE;
+}
+
+// ============== Additional API responses ==============
+
+final class MSJScanListResponse {
+    final List<Map<String, Object>> scans;
+    final int total;
+    final int offset;
+    final int limit;
