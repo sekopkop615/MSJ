@@ -390,3 +390,52 @@ final class MSJApiHandlers {
         return m;
     }
     static Map<String, Object> getGlobalStats(MonsterScanEngine engine) {
+        GlobalStatsDTO g = engine.getGlobalStats();
+        Map<String, Object> m = new HashMap<>();
+        m.put("totalScans", g.totalScans);
+        m.put("totalTokens", g.totalTokens);
+        m.put("totalReporters", g.totalReporters);
+        m.put("whitelistLen", g.whitelistLen);
+        m.put("blacklistLen", g.blacklistLen);
+        m.put("vaultBalance", g.vaultBalance);
+        return m;
+    }
+}
+
+// ============== Batch operations ==============
+
+final class MSJBatch {
+    private MSJBatch() {}
+    static void submitScanBatch(MonsterScanEngine engine, List<String> scanIds, List<String> targets, List<Integer> riskTiers, List<String> flagsHashes, String reporter) {
+        if (scanIds.size() != targets.size() || scanIds.size() != riskTiers.size() || scanIds.size() != flagsHashes.size())
+            throw new MSC_ArrayLengthMismatch();
+        if (scanIds.size() > MSJ.MSC_BATCH_LIMIT) throw new MSC_BatchTooLarge();
+        for (int i = 0; i < scanIds.size(); i++) {
+            engine.submitScan(scanIds.get(i), targets.get(i), riskTiers.get(i), flagsHashes.get(i), reporter);
+        }
+    }
+    static void addToWhitelistBatch(MonsterScanEngine engine, List<String> targets, String caller) {
+        if (targets.size() > MSJ.MSC_BATCH_LIMIT) throw new MSC_BatchTooLarge();
+        for (String t : targets) {
+            if (t != null && !t.isEmpty() && !engine.isWhitelisted(t))
+                engine.addToWhitelist(t, caller);
+        }
+    }
+    static void addToBlacklistBatch(MonsterScanEngine engine, List<String> targets, String caller) {
+        if (targets.size() > MSJ.MSC_BATCH_LIMIT) throw new MSC_BatchTooLarge();
+        for (String t : targets) {
+            if (t != null && !t.isEmpty() && !engine.isBlacklisted(t))
+                engine.addToBlacklist(t, caller);
+        }
+    }
+}
+
+// ============== Scan ID / hash helpers ==============
+
+final class MSJScanIds {
+    private MSJScanIds() {}
+    static String scanIdFromString(String s) { return MSJ.sha256Hex(s); }
+    static String symbolHash(String symbol) { return MSJ.sha256Hex(symbol); }
+    static String categoryNameHash(String name) { return MSJ.sha256Hex(name); }
+}
+
