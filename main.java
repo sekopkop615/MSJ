@@ -341,3 +341,52 @@ final class MSJValidation {
         return tier >= 0 && tier <= MSJ.MSC_MAX_RISK_TIER;
     }
 }
+
+// ============== API Handlers ==============
+
+final class MSJApiHandlers {
+    private MSJApiHandlers() {}
+    static Map<String, Object> listScans(MonsterScanEngine engine, int offset, int limit) {
+        List<String> ids = engine.getScanIdsPaginated(offset, limit);
+        List<Map<String, Object>> list = new ArrayList<>();
+        for (String id : ids) {
+            ScanInfoDTO s = engine.getScan(id);
+            if (s != null) {
+                Map<String, Object> m = new HashMap<>();
+                m.put("scanId", s.scanId);
+                m.put("target", s.target);
+                m.put("riskTier", s.riskTier);
+                m.put("atBlock", s.atBlock);
+                m.put("exists", s.exists);
+                list.add(m);
+            }
+        }
+        Map<String, Object> out = new HashMap<>();
+        out.put("scans", list);
+        out.put("total", engine.getScanIds().size());
+        out.put("offset", offset);
+        out.put("limit", limit);
+        return out;
+    }
+    static Map<String, Object> getScan(MonsterScanEngine engine, String scanId) {
+        ScanInfoDTO s = engine.getScan(scanId);
+        if (s == null) return Collections.emptyMap();
+        Map<String, Object> m = new HashMap<>();
+        m.put("scanId", s.scanId);
+        m.put("target", s.target);
+        m.put("riskTier", s.riskTier);
+        m.put("flagsHash", s.flagsHash);
+        m.put("reporter", s.reporter);
+        m.put("atBlock", s.atBlock);
+        m.put("exists", s.exists);
+        return m;
+    }
+    static Map<String, Object> getAddressStatus(MonsterScanEngine engine, String target) {
+        AddressStatusDTO a = engine.getAddressStatus(target);
+        Map<String, Object> m = new HashMap<>();
+        m.put("whitelisted", a.whitelisted);
+        m.put("blacklisted", a.blacklisted);
+        m.put("scanCount", a.scanCount);
+        return m;
+    }
+    static Map<String, Object> getGlobalStats(MonsterScanEngine engine) {
