@@ -635,3 +635,52 @@ final class MSJTokenApi {
     static Map<String, Object> listTokens(MonsterScanEngine engine, int offset, int limit) {
         List<String> ids = engine.getTokenScanIds();
         int total = ids.size();
+        if (offset >= total) return Map.of("tokens", List.<Map<String, Object>>of(), "total", total, "offset", offset, "limit", limit);
+        int end = Math.min(offset + MSJPagination.clampLimit(limit), total);
+        List<Map<String, Object>> list = new ArrayList<>();
+        for (int i = offset; i < end; i++) {
+            String tid = ids.get(i);
+            Map<String, Object> m = new HashMap<>();
+            m.put("tokenScanId", tid);
+            m.put("tokenAddress", engine.getTokenAddress(tid));
+            m.put("registered", true);
+            list.add(m);
+        }
+        return Map.of("tokens", list, "total", total, "offset", offset, "limit", end - offset);
+    }
+    static Map<String, Object> getToken(MonsterScanEngine engine, String tokenScanId) {
+        if (!engine.tokenRegistered(tokenScanId)) return Collections.emptyMap();
+        return Map.of("tokenScanId", tokenScanId, "tokenAddress", engine.getTokenAddress(tokenScanId), "registered", true);
+    }
+}
+
+// ============== Whitelist/Blacklist API ==============
+
+final class MSJListApi {
+    static Map<String, Object> listWhitelist(MonsterScanEngine engine, int offset, int limit) {
+        List<String> addrs = MSJEngineViews.getWhitelistPaginated(engine, offset, limit);
+        return Map.of("addresses", addrs, "total", engine.whitelistSize(), "offset", offset, "limit", addrs.size());
+    }
+    static Map<String, Object> listBlacklist(MonsterScanEngine engine, int offset, int limit) {
+        List<String> addrs = MSJEngineViews.getBlacklistPaginated(engine, offset, limit);
+        return Map.of("addresses", addrs, "total", engine.blacklistSize(), "offset", offset, "limit", addrs.size());
+    }
+}
+
+// ============== Request validation for API layer ==============
+
+final class MSJRequestValidation {
+    static String validateSubmitScan(MonsterScanEngine engine, String scanId, String target, int riskTier, String reporter) {
+        if (!MSJValidation.isValidScanId(scanId)) return MSJErrorNames.MSC_ZERO_SCAN_ID;
+        if (!MSJValidation.isValidAddress(target)) return MSJErrorNames.MSC_ZERO_ADDRESS;
+        if (!MSJValidation.isValidRiskTier(riskTier)) return MSJErrorNames.MSC_INVALID_RISK_TIER;
+        if (!engine.isReporter(reporter)) return MSJErrorNames.MSC_NOT_REPORTER;
+        if (engine.scanExists(scanId)) return MSJErrorNames.MSC_SCAN_ALREADY_EXISTS;
+        if (engine.scanCount() >= MSJ.MSC_MAX_SCANS) return MSJErrorNames.MSC_MAX_SCANS_REACHED;
+        return null;
+    }
+    static String validateAddWhitelist(MonsterScanEngine engine, String target, String caller) {
+        if (!MSJValidation.isValidAddress(target)) return MSJErrorNames.MSC_ZERO_ADDRESS;
+        if (!engine.getScannerKeeper().equals(caller)) return MSJErrorNames.MSC_NOT_KEEPER;
+        if (engine.isWhitelisted(target)) return MSJErrorNames.MSC_ALREADY_WHITELISTED;
+        return null;
