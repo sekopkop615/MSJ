@@ -586,3 +586,52 @@ final class MSJRiskTier {
     static boolean isHigh(int tier, int threshold) { return tier >= threshold; }
 }
 
+// ============== Event / error name constants for frontends ==============
+
+final class MSJEventNames {
+    static final String TOKEN_REGISTERED = "TokenRegistered";
+    static final String ADDRESS_SCANNED = "AddressScanned";
+    static final String SCAN_RESULT_SUBMITTED = "ScanResultSubmitted";
+    static final String WHITELIST_ADDED = "WhitelistAdded";
+    static final String WHITELIST_REMOVED = "WhitelistRemoved";
+    static final String BLACKLIST_ADDED = "BlacklistAdded";
+    static final String BLACKLIST_REMOVED = "BlacklistRemoved";
+    static final String THRESHOLD_UPDATED = "ThresholdUpdated";
+    static final String REPORTER_REGISTERED = "ReporterRegistered";
+    static final String REPORTER_REVOKED = "ReporterRevoked";
+    static final String SCANNER_PAUSED = "ScannerPaused";
+    static final String SCANNER_UNPAUSED = "ScannerUnpaused";
+    static final String VAULT_WITHDRAWN = "VaultWithdrawn";
+    static final String FEE_COLLECTED = "FeeCollected";
+    static final String BATCH_SCANS_SUBMITTED = "BatchScansSubmitted";
+}
+
+final class MSJErrorNames {
+    static final String MSC_ZERO_ADDRESS = "MSC_ZeroAddress";
+    static final String MSC_ZERO_SCAN_ID = "MSC_ZeroScanId";
+    static final String MSC_NOT_KEEPER = "MSC_NotKeeper";
+    static final String MSC_NOT_REPORTER = "MSC_NotReporter";
+    static final String MSC_NOT_VAULT = "MSC_NotVault";
+    static final String MSC_SCAN_ALREADY_EXISTS = "MSC_ScanAlreadyExists";
+    static final String MSC_SCAN_NOT_FOUND = "MSC_ScanNotFound";
+    static final String MSC_INVALID_RISK_TIER = "MSC_InvalidRiskTier";
+    static final String MSC_ALREADY_WHITELISTED = "MSC_AlreadyWhitelisted";
+    static final String MSC_NOT_WHITELISTED = "MSC_NotWhitelisted";
+    static final String MSC_ALREADY_BLACKLISTED = "MSC_AlreadyBlacklisted";
+    static final String MSC_NOT_BLACKLISTED = "MSC_NotBlacklisted";
+    static final String MSC_ARRAY_LENGTH_MISMATCH = "MSC_ArrayLengthMismatch";
+    static final String MSC_BATCH_TOO_LARGE = "MSC_BatchTooLarge";
+    static final String MSC_MAX_SCANS_REACHED = "MSC_MaxScansReached";
+    static final String MSC_INVALID_CATEGORY = "MSC_InvalidCategory";
+    static final String MSC_CATEGORY_LIMIT_REACHED = "MSC_CategoryLimitReached";
+    static final String MSC_ZERO_TOKEN = "MSC_ZeroToken";
+    static final String MSC_REPORTER_ALREADY_REGISTERED = "MSC_ReporterAlreadyRegistered";
+    static final String MSC_REPORTER_NOT_REGISTERED = "MSC_ReporterNotRegistered";
+}
+
+// ============== Token API ==============
+
+final class MSJTokenApi {
+    static Map<String, Object> listTokens(MonsterScanEngine engine, int offset, int limit) {
+        List<String> ids = engine.getTokenScanIds();
+        int total = ids.size();
