@@ -684,3 +684,52 @@ final class MSJRequestValidation {
         if (!engine.getScannerKeeper().equals(caller)) return MSJErrorNames.MSC_NOT_KEEPER;
         if (engine.isWhitelisted(target)) return MSJErrorNames.MSC_ALREADY_WHITELISTED;
         return null;
+    }
+    static String validateAddBlacklist(MonsterScanEngine engine, String target, String caller) {
+        if (!MSJValidation.isValidAddress(target)) return MSJErrorNames.MSC_ZERO_ADDRESS;
+        if (!engine.getScannerKeeper().equals(caller)) return MSJErrorNames.MSC_NOT_KEEPER;
+        if (engine.isBlacklisted(target)) return MSJErrorNames.MSC_ALREADY_BLACKLISTED;
+        return null;
+    }
+}
+
+// ============== Integration notes (documentation) ==============
+
+/*
+ * MSJ (MonsterScan Java) mirrors the MonsterScan.sol contract logic for off-chain tooling and backends.
+ *
+ * Usage:
+ * 1. Create engine: MonsterScanEngine engine = new MonsterScanEngine(keeperAddress, vaultAddress, deployBlock).
+ * 2. Keeper registers reporters: engine.registerReporter(reporterAddress, keeperAddress).
+ * 3. Keeper registers tokens: engine.registerToken(tokenScanId, tokenAddress, symbolHash, keeperAddress).
+ * 4. Keeper registers categories: int catId = engine.registerCategory(nameHash, keeperAddress).
+ * 5. Reporters submit scans: engine.submitScan(scanId, target, riskTier, flagsHash, reporterAddress) or submitScanWithCategory(..., categoryId, reporter).
+ * 6. Keeper manages whitelist/blacklist: engine.addToWhitelist(target, keeper), engine.addToBlacklist(target, keeper), removeFromWhitelist/removeFromBlacklist.
+ * 7. Keeper sets risk thresholds: engine.setRiskThreshold(tier, value, keeper).
+ * 8. Query: MSJApiHandlers.getGlobalStats(engine), getScan(engine, scanId), getAddressStatus(engine, target), listScans(engine, offset, limit).
+ * 9. Batch: MSJBatch.submitScanBatch(...), addToWhitelistBatch(...), addToBlacklistBatch(...).
+ *
+ * Scan IDs and token scan IDs should be unique (e.g. MSJScanIds.scanIdFromString(uniqueId) or sha256 of (target+timestamp)).
+ * Addresses must be 40-char hex (with or without 0x). Risk tier 0-10. Constants in MSJ and MSJConstants.
+ * Report vault address in constructor: 0x4B7e2F9a1C5d8E0b3A6c9D2f5E8a1B4d7C0e3F6a9 (replace for production).
+ *
+ * Event names: MSJEventNames.TOKEN_REGISTERED, ADDRESS_SCANNED, SCAN_RESULT_SUBMITTED, WHITELIST_ADDED, WHITELIST_REMOVED,
+ * BLACKLIST_ADDED, BLACKLIST_REMOVED, THRESHOLD_UPDATED, REPORTER_REGISTERED, REPORTER_REVOKED, SCANNER_PAUSED, SCANNER_UNPAUSED,
+ * VAULT_WITHDRAWN, FEE_COLLECTED, BATCH_SCANS_SUBMITTED.
+ * Error names: MSJErrorNames.MSC_ZERO_ADDRESS, MSC_ZERO_SCAN_ID, MSC_NOT_KEEPER, MSC_NOT_REPORTER, MSC_NOT_VAULT, etc.
+ *
+ * Pagination: MSJPagination.clampLimit(limit), endIndex(offset, limit, total), validOffset(offset, total).
+ * Risk labels: MSJRiskTier.label(tier) returns "LOW"|"MEDIUM"|"HIGH"|"CRITICAL". MSJRiskTier.isHigh(tier, threshold).
+ */
+
+// --- MSJ module end ---
+
+// Additional view wrappers for compatibility
+final class MSJViewWrappers {
+    static int scanCount(MonsterScanEngine e) { return e.scanCount(); }
+    static int tokenCount(MonsterScanEngine e) { return e.tokenCount(); }
+    static int reporterCount(MonsterScanEngine e) { return e.reporterCount(); }
+    static int whitelistSize(MonsterScanEngine e) { return e.whitelistSize(); }
+    static int blacklistSize(MonsterScanEngine e) { return e.blacklistSize(); }
+    static long vaultBalance(MonsterScanEngine e) { return e.getVaultBalance(); }
+    static String keeper(MonsterScanEngine e) { return e.getScannerKeeper(); }
